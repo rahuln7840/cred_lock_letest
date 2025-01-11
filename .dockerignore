@@ -1,0 +1,17 @@
+# Ignore Git related files
+.git
+.gitignore
+
+# Ignore Node.js related files
+node_modules
+npm-debug.log
+
+# Ignore Docker specific files
+.dockerignore
+
+# Ignore development/test related files
+*.log
+*.tmp
+*.tmp.*
+*.swp
+.DS_Store
