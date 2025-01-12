@@ -119,8 +119,16 @@ export class DeviceController {
         name: 'limit',
         required: false,
     })
-    find(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
-        return this.deviceService.findDevice(page, limit);
+    @ApiQuery({
+        name: 'search',
+        required: false,
+    })
+    find(
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10,
+        @Query('search') search?: string,
+    ) {
+        return this.deviceService.findDevice(page, limit, search);
     }
 
     @Patch('boxlock/:id')

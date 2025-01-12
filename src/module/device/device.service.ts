@@ -76,7 +76,7 @@ export class DeviceService {
         return await newDevice.save();
     }
 
-    async findDevice(page, limit) {
+    async findDeviceOld(page, limit, search?: string) {
         const { skip, take } = await this.utils.calculatePagination(
             page,
             limit,
@@ -89,7 +89,9 @@ export class DeviceService {
             .exec();
         const logs = await this.activityModel.find().exec();
 
-        const totalDevicesCount = await this.deviceModel.countDocuments().exec();
+        const totalDevicesCount = await this.deviceModel
+            .countDocuments()
+            .exec();
 
         const DevicesWithLogs = devices.map((device) => {
             const associatedLogs = logs.filter(
@@ -116,14 +118,77 @@ export class DeviceService {
             device_data: devices,
             locked_device_data: lockedDevice,
             meta: {
-                total_records: totalDevicesCount,      
-                current_page: page,                    
-                page_size: take,                       
-                current_page_records: devices.length,   
+                total_records: totalDevicesCount,
+                current_page: page,
+                page_size: take,
+                current_page_records: devices.length,
             },
         };
         return response;
     }
+
+    // here i have make new with the search keyword with the api 
+    
+    async findDevice(page, limit, search?: string) {
+        const { skip, take } = await this.utils.calculatePagination(page, limit);
+    
+        let searchQuery = {};
+        if (search) {
+            searchQuery = {
+                $or: [
+                    { device_name: { $regex: `^${search}`, $options: 'i' } },
+                    { customer_email: { $regex: `^${search}`, $options: 'i' } },
+                ],
+            };
+        }
+    
+        const devices = await this.deviceModel
+            .find(searchQuery)
+            .skip(skip)
+            .limit(take)
+            .exec();
+    
+        const logs = await this.activityModel.find().exec();
+    
+        const totalDevicesCount = await this.deviceModel
+            .countDocuments(searchQuery)
+            .exec();
+    
+        const DevicesWithLogs = devices.map((device) => {
+            const associatedLogs = logs.filter(
+                (log) => log.device_id === device.device_id
+            );
+    
+            const final = {
+                ...device.toObject(),
+                device_logs: associatedLogs,
+            };
+            return final;
+        });
+    
+        let lockedDevice = devices
+            .filter((x) => x.lock === true)
+            .map((device) => {
+                return {
+                    apn_number: device.apn_number,
+                    device_name: device.device_name,
+                };
+            });
+    
+        let response = {
+            device_data: DevicesWithLogs,
+            locked_device_data: lockedDevice,
+            meta: {
+                total_records: totalDevicesCount,
+                current_page: page,
+                page_size: take,
+                current_page_records: devices.length,
+            },
+        };
+    
+        return response;
+    }
+    
 
     async findDeviceOptimized() {
         const devices = await this.deviceModel
