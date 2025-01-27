@@ -1,8 +1,10 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Get,
     HttpStatus,
+    Param,
     Post,
     UseGuards,
 } from '@nestjs/common';
@@ -70,5 +72,30 @@ export class DeviceActivityController {
     })
     find() {
         return this.service.findLogs();
+    }
+
+    @Get('logs/:deviceId')
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: ApiError.SUCCESS_MESSAGE,
+    })
+    @ApiResponse({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        description: ApiError.INTERNAL_SERVER_ERROR_MESSAGE,
+    })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: ApiError.BAD_REQUEST,
+    })
+    @ApiOperation({
+        summary: 'find device',
+        description: 'find device',
+    })
+    async findLogsByDeviceId(@Param('deviceId') deviceId: string) {
+        try {
+            return await this.service.findLogsByDeviceId(deviceId);
+        } catch (error) {
+            throw new BadRequestException(error.message);
+        }
     }
 }

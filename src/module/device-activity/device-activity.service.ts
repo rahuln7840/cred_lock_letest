@@ -39,4 +39,21 @@ export class DeviceActivityService {
             .exec();
         return result;
     }
+
+    async findLogsByDeviceId(deviceId: string) {
+        const findDevice = await this.deviceModel.findOne({
+            device_id: deviceId,
+        });
+
+        if (!findDevice) {
+            throw new BadRequestException('Device not found');
+        }
+
+        const logs = await this.activityModel
+            .find({ device_id: deviceId })
+            .populate('device_id')
+            .exec();
+
+        return logs
+    }
 }
